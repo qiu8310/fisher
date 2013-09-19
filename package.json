@@ -1,0 +1,27 @@
+{
+  "name": "fisher",
+  "version": "0.1.0",
+  "description": "watch file or directory change accurately",
+  "main": "./index",
+  "scripts": {
+    "test": "nodeunit test/test.js"
+  },
+  "bin": {
+    "fisher": "./bin/fisher.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/qiu8310/fisher"
+  },
+  "keywords": [
+    "watch",
+    "file"
+  ],
+  "author": "Zhonglei Qiu",
+  "license": "MIT",
+  "dependencies": {
+  },
+  "bugs": {
+    "url": "https://github.com/qiu8310/fisher/issues"
+  }
+}
