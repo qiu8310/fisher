@@ -1,27 +1,43 @@
 #!/usr/bin/env node
 
-var fisher = require ('../index');
+var fisher = require ('../index'),
+    path   = require ('path');
 
-var log = console.log, interval;
+var log = console.log, interval, root = process.argv[2];
 
-if (typeof process.argv[2] !== 'undefined') {
+if (typeof root !== 'undefined') {
 	if (process.argv[3]) interval = parseInt(process.argv[3], 10);
     
-	fisher.watch(process.argv[2], {interval: interval})
+    var root = path.resolve(process.cwd(), root).replace(/\\/g, '/');
+
+    log('start watch ' + root);
+
+	fisher.watch(root, {interval: interval})
 		.on('update', function (n) {
 			var str = n.stats.isFile() ? 'file' : ' dir';
-			console.log('~ update ' + str + ': ' + n.filepath)
+			log(' ~ update ' + str + ': ' + n.filepath)
 		})
 		.on('delete', function (n) {
 			var str = n.stats.isFile() ? 'file' : 'dir';
-			console.log('- delete ' + str + ': ' + n.filepath)
+			log(' - delete ' + str + ': ' + n.filepath)
 		})
 		.on('create', function (n) {
 			var str = n.stats.isFile() ? 'file' : 'dir';
-			console.log('+ create ' + str + ': ' + n.filepath)
+			log(' + create ' + str + ': ' + n.filepath)
 		});
     
-    setInterval(function () {}, 10000); // do nothing
+
+    process.on('exit', function () {
+        fisher.stop();
+        log('end watch ' + root);
+    });
+    process.on('SIGNAL', function () {
+        fisher.stop();
+        log('end watch ' + root);
+    });
+
+    setInterval(function () {}, 1000000); // do nothing
+
 } else {
     log('')
     log('Usage: watch <path> [interval]')
