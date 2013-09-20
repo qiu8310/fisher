@@ -1,13 +1,13 @@
 {
   "name": "fisher",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "watch file or directory change accurately",
   "main": "./index",
   "scripts": {
     "test": "nodeunit test/test.js"
   },
   "bin": {
-    "fisher": "./bin/fisher.js"
+    "fisher": "./bin/fisher"
   },
   "repository": {
     "type": "git",
