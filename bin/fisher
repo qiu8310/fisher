@@ -10,15 +10,15 @@ if (typeof process.argv[2] !== 'undefined') {
 	fisher.watch(process.argv[2], {interval: interval})
 		.on('update', function (n) {
 			var str = n.stats.isFile() ? 'file' : ' dir';
-			console.log('-------------------------------- update ' + str + ': ' + n.filepath)
+			console.log('~ update ' + str + ': ' + n.filepath)
 		})
 		.on('delete', function (n) {
 			var str = n.stats.isFile() ? 'file' : 'dir';
-			console.log('-------------------------------- delete ' + str + ': ' + n.filepath)
+			console.log('- delete ' + str + ': ' + n.filepath)
 		})
 		.on('create', function (n) {
 			var str = n.stats.isFile() ? 'file' : 'dir';
-			console.log('-------------------------------- create ' + str + ': ' + n.filepath)
+			console.log('+ create ' + str + ': ' + n.filepath)
 		});
     
     setInterval(function () {}, 10000); // do nothing
