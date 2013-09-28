@@ -5,43 +5,52 @@ var fisher = require ('../index'),
 
 var log = console.log, interval, root = process.argv[2];
 
+var colors = {
+        red:    ['\x1B[31m', '\x1B[39m'],
+        green:  ['\x1B[32m', '\x1B[39m'],
+        blue:   ['\x1B[34m', '\x1B[39m'],
+        white:  ['\x1B[37m', '\x1B[39m'],
+        gray:   ['\x1B[90m', '\x1B[39m']
+    };
+function c(str, color) { return colors[color][0] + str + colors[color][1]; }
+
 if (typeof root !== 'undefined') {
 	if (process.argv[3]) interval = parseInt(process.argv[3], 10);
     
-    var root = path.resolve(process.cwd(), root).replace(/\\/g, '/');
+    var root = path.resolve(process.cwd(), root).replace(/\\/g, '/'), watcher;
 
-    log('start watch ' + root);
+    log(c('start watch ', 'gray') + root);
 
-	fisher.watch(root, {interval: interval})
+	watcher = fisher.watch(root, {interval: interval})
 		.on('update', function (n) {
-			var str = n.stats.isFile() ? 'file' : ' dir';
-			log(' ~ update ' + str + ': ' + n.filepath)
+			var str = n.stats.isFile() ? 'file' : ' dir ';
+			log(c(' ~ update ' + str, 'blue') + ': ' + n.filepath)
 		})
 		.on('delete', function (n) {
 			var str = n.stats.isFile() ? 'file' : 'dir';
-			log(' - delete ' + str + ': ' + n.filepath)
+			log(c(' - delete ' + str, 'red') + ': ' + n.filepath)
 		})
 		.on('create', function (n) {
 			var str = n.stats.isFile() ? 'file' : 'dir';
-			log(' + create ' + str + ': ' + n.filepath)
+			log(c(' + create ' + str,'green') + ': ' + n.filepath)
 		});
     
 
-    process.on('exit', function () {
-        fisher.stop();
-        log('end watch ' + root);
-    });
-    process.on('SIGNAL', function () {
-        fisher.stop();
-        log('end watch ' + root);
-    });
+    process.on('SIGINT', function () { graceful_exit(); });
+
+    function graceful_exit () {
+        watcher.stop();
+        log('');
+        log(c('end watch ','gray') + root);
+        process.exit(0);
+    }
 
     setInterval(function () {}, 1000000); // do nothing
 
 } else {
     log('')
-    log('Usage: watch <path> [interval]')
+    log(' ' + c('Usage:','blue') + ' fisher <path> [interval]')
     log('')
-    log('watch file or directory change accurately')
+    log('        watch file or directory change accurately')
     log('')
 }

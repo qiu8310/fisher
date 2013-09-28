@@ -31,8 +31,6 @@ var p = function (a, b) { return path.join(a, b).replace(/\\/g, '/'); }
 // create file
 var f = function (a) { if(!Array.isArray(a)) a = [a]; for(var i=0,l=a.length; i<l; ++i) {fs.closeSync(fs.openSync(a[i], 'w'));} }
 
-// sleep
-var sleep = function (ms) { var s = +new Date; while(+new Date - s > ms) {console.log(1)} }
 
 module.exports = {
 	setUp: function (cb) {
@@ -59,13 +57,13 @@ module.exports = {
 
 		this.watcher
 			.on('update', function (n) {
-				console.log('-------------------------------- update: ' + n.filepath)
+				console.log('~~~~~~~~ update: ' + n.filepath)
 			})
 			.on('delete', function (n) {
-				console.log('-------------------------------- delete: ' + n.filepath)
+				console.log('-------- delete: ' + n.filepath)
 			})
 			.on('create', function (n) {
-				console.log('-------------------------------- create: ' + n.filepath)
+				console.log('++++++++ create: ' + n.filepath)
 			});
 		
 		cb();
