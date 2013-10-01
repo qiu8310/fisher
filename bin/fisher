@@ -3,7 +3,7 @@
 var fisher = require ('../index'),
     path   = require ('path');
 
-var log = console.log, interval, root = process.argv[2];
+var log = console.log, interval = 1500, root = process.argv[2];
 
 var colors = {
         red:    ['\x1B[31m', '\x1B[39m'],
@@ -15,13 +15,23 @@ var colors = {
 function c(str, color) { return colors[color][0] + str + colors[color][1]; }
 
 if (typeof root !== 'undefined') {
-	if (process.argv[3]) interval = parseInt(process.argv[3], 10);
-    
-    var root = path.resolve(process.cwd(), root).replace(/\\/g, '/'), watcher;
+    var root = path.resolve(process.cwd(), root).replace(/\\/g, '/'), 
+        watcher,
+        i = 3, l, patterns;
+
+	if (/\d+/.test(process.argv[3])) {
+        interval = parseInt(process.argv[3], 10);
+        i = 4;
+    }
+    while (process.argv[i]) {
+        if (!patterns) patterns = [];
+        patterns.push({pattern: process.argv[i]});
+        i++;
+    }
 
     log(c('start watch ', 'gray') + root);
 
-	watcher = fisher.watch(root, {interval: interval})
+	watcher = fisher.watch(root, {interval: interval, exclude: patterns})
 		.on('update', function (n) {
 			var str = n.stats.isFile() ? 'file' : ' dir ';
 			log(c(' ~ update ' + str, 'blue') + ': ' + n.filepath)

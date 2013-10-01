@@ -1,6 +1,6 @@
 {
   "name": "fisher",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "watch file or directory change accurately",
   "main": "./index",
   "scripts": {
@@ -20,6 +20,7 @@
   "author": "Zhonglei Qiu",
   "license": "MIT",
   "dependencies": {
+    "minimatch": "~0.2.12"
   },
   "bugs": {
     "url": "https://github.com/qiu8310/fisher/issues"

@@ -6,19 +6,27 @@
  */
 "use strict";
 
-var util 	= require('util'),
-	fs 		= require('fs'),
-	path 	= require('path'),
-	events 	= require('events');
+var util 		= require('util'),
+	fs 			= require('fs'),
+	path 		= require('path'),
+	events 		= require('events'),
+	minimatch 	= require("minimatch");
 
 /**
  *	files tree node
  */
-function TreeNode (filepath) {
+function TreeNode (filepath, exclude) {
 	if (!filepath || typeof filepath !== 'string') throw new Error('Wrong arguments for TreeNode');
 
 	this.filepath = path.resolve(process.cwd(), filepath).replace(/\\/g, '/');  // use linux sep
 	this.nodeType = TreeNode.NODE_NO;
+
+	if (exclude && Array.isArray(exclude)) {
+		for (var i=0,l=exclude.length; i<l; ++i) {
+			if (minimatch(this.filepath, exclude[i].pattern, exclude[i].options)) return false;
+		}
+	}
+
 	try {
 		this.stats = fs.statSync(this.filepath);  // if file not exist, this will throw an error
 		this.children = [];
@@ -28,7 +36,7 @@ function TreeNode (filepath) {
 			this.nodeType = TreeNode.NODE_DIR;
 			for (i=0,l=files.length; i<l; i++) {
 				f = path.join(this.filepath, files[i]);
-				n = new TreeNode(f);
+				n = new TreeNode(f, exclude);
 				if (n.available()) {
 					this.addChild(n);
 				}
@@ -73,22 +81,29 @@ TreeNode.prototype = {
 /**
  *	opts:
  * 		interval: 1500
+ *		exclude: {
+ *					options:{}, 
+ *					patterns:[{
+ *						options:{},
+ *						pattern: ''
+ *					},...]
+ *				} 		
+ *
  * 		events: create, delete, update
  * 		functions: stop(), start()
  *
  */
 function Watcher (root, opts) {
-	var self = this;
+	var self = this, exclude;
 	events.EventEmitter.call(this);
 
 	opts = opts || {};
 	
 	self.sid = 0;
 	self.interval 	= opts.interval || 1500;
-
-	self.tree = new TreeNode(root);
+	self.exclude 	= self._parseExclude(opts.exclude);
+	self.tree = new TreeNode(root, self.exclude);
 	self.root = self.tree.filepath;
-
 	self.isPrevRunning = false;		// if prev walk is running
 
 	var walk = function () {
@@ -101,7 +116,7 @@ function Watcher (root, opts) {
 				self.tree = self.newTree;	// update old tree
 			}
 
-			self.newTree = new TreeNode(self.root);
+			self.newTree = new TreeNode(self.root, self.exclude);
 			// root may be deleted
 			if (self.newTree.available() && !self.tree.available()) {
 				self.emit('create', self.newTree, 'create');
@@ -178,6 +193,57 @@ Watcher.prototype._traverse = function (p, c) {
 	}
 }
 
+Watcher.prototype._parseExclude = function (excludeOpt) {
+	var exclude = [],
+		parse, baseOpts, elems, i, l;
+
+	if (!excludeOpt) return null;
+	baseOpts = excludeOpt.options || null;
+
+	parse = function (obj) {
+		var elem = {}, k;
+		if (typeof obj === 'string' && obj !== '') {
+			elem.pattern = obj;
+			if (baseOpts) elem.options = baseOpts;
+			exclude.push(elem);
+		} else if (obj && obj.pattern) {
+			elem.pattern = obj.pattern;
+			if (!baseOpts) {
+				if (obj.options) elem.options = obj.options;
+			} else {
+				if (obj.options) {
+					elem.options = obj.options;
+					for (k in baseOpts) {
+						if (typeof elem.options[k] === 'undefined') {
+							elem.options[k] = baseOpts[k];
+						}
+					}
+				} else {
+					elem.options = baseOpts;
+				}
+			}
+			exclude.push(elem);
+		}
+	}
+	// is string
+	if (typeof excludeOpt === 'string') {
+		parse(excludeOpt);
+
+	} else if (typeof excludeOpt.pattern === 'string') {
+		parse(excludeOpt.pattern);
+
+	// is array
+	} else {
+		elems = excludeOpt.patterns || excludeOpt;
+		if (Array.isArray(elems)) {
+			for (i=0,l=elems.length; i<l; ++i) {
+				parse(elems[i]);
+			}
+		}
+	}
+	return exclude.length === 0 ? null : exclude;
+}
+
 Watcher.prototype.stop = function (cb) {
 	this.emit('stop', cb);
 	return this;
@@ -191,3 +257,4 @@ Watcher.prototype.start = function (cb) {
 exports.watch = function (root, opts) {
 	return new Watcher(root, opts);
 }
+
