@@ -4,8 +4,7 @@ var path 		= require('path'),
 	fs 			= require('fs'),
 	fisher 		= require('../index');
 
-
-// rm -rf
+// same as linux command: rm -rf
 var rm_rf = function (dir) {
 	try {
 		var files = fs.readdirSync(dir);
